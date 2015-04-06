@@ -5,7 +5,7 @@ try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
-from libnmap.objects import NmapHost, NmapService, NmapReport
+from libnmap.objects import NmapHost, NmapService, NmapReport, NmapExtraPort
 
 
 class NmapParser(object):
@@ -305,6 +305,7 @@ class NmapParser(object):
             _stime = _host_header['starttime']
         if 'endtime' in _host_header:
             _etime = _host_header['endtime']
+
         nhost = NmapHost(_stime,
                          _etime,
                          _addresses,
@@ -349,14 +350,14 @@ class NmapParser(object):
 
         xelement = cls.__format_element(scanports_data)
 
-        rdict = {'ports': [], 'extraports': None}
+        rdict = {'ports': [], 'extraports': []}
         for xservice in xelement:
             if xservice.tag == 'port':
                 nport = cls._parse_xml_port(xservice)
                 rdict['ports'].append(nport)
             elif xservice.tag == 'extraports':
                 extraports = cls.__parse_extraports(xservice)
-                rdict['extraports'] = extraports
+                rdict['extraports'].append(extraports)
             # else:
             #    print "struct port unknown attr: %s value: %s" %
             #           (h.tag, h.get(h.tag))
@@ -451,7 +452,8 @@ class NmapParser(object):
             if xelt.tag == 'extrareasons':
                 extrareasons_dict = cls.__format_attributes(xelt)
                 rdict['reasons'].append(extrareasons_dict)
-        return rdict
+        robj = NmapExtraPort(rdict)
+        return robj
 
     @classmethod
     def __parse_script(cls, script_data):
