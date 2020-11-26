@@ -1,15 +1,15 @@
-name: Preflight Validation
+name: Preflight Check
 
 on:
   push:
     branches:
-      - feature/gh-actions
+      - '**'
   pull_request:
     branches:
       - main
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -32,7 +32,24 @@ jobs:
         flake8 --exclude test,docs,examples .
     - name: Test with pytest
       run: |
-        pytest --cov=libnmap/ --ignore=libnmap/test/test_backend_plugin_factory.py
-    - name: Coveralls metrics push
+        pytest --ignore=libnmap/test/test_backend_plugin_factory.py
+    - name: Upload Coverage
+      if: matrix.python-version != '2.7'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
+        COVERALLS_PARALLEL: true
       run: |
         coveralls
+  coveralls:
+    name: Finish Coveralls
+    needs: test
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+    - name: Finished
+      run: |
+        pip3 install --upgrade coveralls
+        coveralls --finish
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
