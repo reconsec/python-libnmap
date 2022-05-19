@@ -359,7 +359,9 @@ class NmapParser(object):
         hostnames = []
         for hname in xelement:
             if hname.tag == "hostname":
-                hostnames.append(hname.get("name"))
+                hostname_dict = {'name':hname.get("name"), 'type':hname.get("type")}
+                hostnames.append(hostname_dict)
+                #hostnames.append(hname.get("name"))
         return hostnames
 
     @classmethod
